@@ -157,6 +157,18 @@ void txPacket(int port_num, int protocol_version)
   }
 }
 
+void _txPacket(int port_num, int protocol_version, uint8_t * tx_packet)
+{
+  if (protocol_version == 1)
+  {
+    _txPacket1(port_num, tx_packet);
+  }
+  else
+  {
+    _txPacket2(port_num, tx_packet);
+  }
+}
+
 void rxPacket(int port_num, int protocol_version)
 {
   if (protocol_version == 1)

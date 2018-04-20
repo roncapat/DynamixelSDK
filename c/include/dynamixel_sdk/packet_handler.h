@@ -88,6 +88,8 @@ WINDECLSPEC uint8_t     getLastRxPacketError    (int port_num, int protocol_vers
 WINDECLSPEC void        setDataWrite        (int port_num, int protocol_version, uint16_t data_length, uint16_t data_pos, uint32_t data);
 WINDECLSPEC uint32_t    getDataRead         (int port_num, int protocol_version, uint16_t data_length, uint16_t data_pos);
 
+WINDECLSPEC void        _txPacket            (int port_num, int protocol_version, uint8_t *tx_packet);
+
 WINDECLSPEC void        txPacket            (int port_num, int protocol_version);
 
 WINDECLSPEC void        rxPacket            (int port_num, int protocol_version);

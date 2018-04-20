@@ -313,7 +313,7 @@ void removeStuffing(uint8_t *packet)
   packet[PKT_LENGTH_H] = DXL_HIBYTE(packet_length_out);
 }
 
-void txPacket2(int port_num)
+void _txPacket2(int port_num, uint8_t *tx_packet)
 {
   uint16_t total_packet_length = 0;
   uint16_t written_packet_length = 0;
@@ -327,10 +327,10 @@ void txPacket2(int port_num)
   g_is_using[port_num] = True;
 
   // byte stuffing for header
-  addStuffing(packetData[port_num].tx_packet);
+  addStuffing(tx_packet);
 
   // check max packet length
-  total_packet_length = DXL_MAKEWORD(packetData[port_num].tx_packet[PKT_LENGTH_L], packetData[port_num].tx_packet[PKT_LENGTH_H]) + 7;
+  total_packet_length = DXL_MAKEWORD(tx_packet[PKT_LENGTH_L], tx_packet[PKT_LENGTH_H]) + 7;
   // 7: HEADER0 HEADER1 HEADER2 RESERVED ID LENGTH_L LENGTH_H
   if (total_packet_length > TXPACKET_MAX_LEN)
   {
@@ -340,19 +340,19 @@ void txPacket2(int port_num)
   }
 
   // make packet header
-  packetData[port_num].tx_packet[PKT_HEADER0] = 0xFF;
-  packetData[port_num].tx_packet[PKT_HEADER1] = 0xFF;
-  packetData[port_num].tx_packet[PKT_HEADER2] = 0xFD;
-  packetData[port_num].tx_packet[PKT_RESERVED] = 0x00;
+  tx_packet[PKT_HEADER0] = 0xFF;
+  tx_packet[PKT_HEADER1] = 0xFF;
+  tx_packet[PKT_HEADER2] = 0xFD;
+  tx_packet[PKT_RESERVED] = 0x00;
 
   // add CRC16
-  crc = updateCRC(0, packetData[port_num].tx_packet, total_packet_length - 2);    // 2: CRC16
-  packetData[port_num].tx_packet[total_packet_length - 2] = DXL_LOBYTE(crc);
-  packetData[port_num].tx_packet[total_packet_length - 1] = DXL_HIBYTE(crc);
+  crc = updateCRC(0, tx_packet, total_packet_length - 2);    // 2: CRC16
+  tx_packet[total_packet_length - 2] = DXL_LOBYTE(crc);
+  tx_packet[total_packet_length - 1] = DXL_HIBYTE(crc);
 
   // tx packet
   clearPort(port_num);
-  written_packet_length = writePort(port_num, packetData[port_num].tx_packet, total_packet_length);
+  written_packet_length = writePort(port_num, tx_packet, total_packet_length);
   if (total_packet_length != written_packet_length)
   {
     g_is_using[port_num] = False;
@@ -361,6 +361,11 @@ void txPacket2(int port_num)
   }
 
   packetData[port_num].communication_result = COMM_SUCCESS;
+}
+
+void txPacket2(int port_num)
+{
+  _txPacket2(port_num, packetData[port_num].tx_packet);
 }
 
 void rxPacket2(int port_num)

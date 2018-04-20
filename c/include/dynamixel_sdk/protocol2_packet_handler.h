@@ -37,6 +37,8 @@ WINDECLSPEC uint8_t     getLastRxPacketError2   (int port_num);
 WINDECLSPEC void        setDataWrite2       (int port_num, uint16_t data_length, uint16_t data_pos, uint32_t data);
 WINDECLSPEC uint32_t    getDataRead2        (int port_num, uint16_t data_length, uint16_t data_pos);
 
+WINDECLSPEC void        _txPacket2           (int port_num, uint8_t *tx_packet);
+
 WINDECLSPEC void        txPacket2           (int port_num);
 WINDECLSPEC void        rxPacket2           (int port_num);
 WINDECLSPEC void        txRxPacket2         (int port_num);

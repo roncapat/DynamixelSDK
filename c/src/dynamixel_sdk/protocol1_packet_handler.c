@@ -169,12 +169,12 @@ uint32_t getDataRead1(int port_num, uint16_t data_length, uint16_t data_pos)
   }
 }
 
-void txPacket1(int port_num)
+void _txPacket1(int port_num, uint8_t *tx_packet)
 {
   uint16_t idx;
 
   uint8_t checksum = 0;
-  uint8_t total_packet_length = packetData[port_num].tx_packet[PKT_LENGTH] + 4; // 4: HEADER0 HEADER1 ID LENGTH
+  uint8_t total_packet_length = tx_packet[PKT_LENGTH] + 4; // 4: HEADER0 HEADER1 ID LENGTH
   uint8_t written_packet_length = 0;
 
   if (g_is_using[port_num])
@@ -193,19 +193,19 @@ void txPacket1(int port_num)
   }
 
   // make packet header
-  packetData[port_num].tx_packet[PKT_HEADER0] = 0xFF;
-  packetData[port_num].tx_packet[PKT_HEADER1] = 0xFF;
+  tx_packet[PKT_HEADER0] = 0xFF;
+  tx_packet[PKT_HEADER1] = 0xFF;
 
   // add a checksum to the packet
   for (idx = 2; idx < total_packet_length - 1; idx++)   // except header, checksum
   {
-    checksum += packetData[port_num].tx_packet[idx];
+    checksum += tx_packet[idx];
   }
-  packetData[port_num].tx_packet[total_packet_length - 1] = ~checksum;
+  tx_packet[total_packet_length - 1] = ~checksum;
 
   // tx packet
   clearPort(port_num);
-  written_packet_length = writePort(port_num, packetData[port_num].tx_packet, total_packet_length);
+  written_packet_length = writePort(port_num, tx_packet, total_packet_length);
   if (total_packet_length != written_packet_length)
   {
     g_is_using[port_num] = False;
@@ -214,6 +214,11 @@ void txPacket1(int port_num)
   }
 
   packetData[port_num].communication_result = COMM_SUCCESS;
+}
+
+void txPacket1(int port_num)
+{
+  _txPacket1(port_num, packetData[port_num].tx_packet);
 }
 
 void rxPacket1(int port_num)
