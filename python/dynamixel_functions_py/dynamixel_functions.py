@@ -22,10 +22,10 @@
 import ctypes
 from ctypes import cdll
 from ctypes import c_int, c_char_p, c_uint8, c_uint16, c_uint32, c_double, POINTER
-dxl_lib = cdll.LoadLibrary("../../c/build/win32/output/dxl_x86_c.dll")  # for windows 32bit
+#dxl_lib = cdll.LoadLibrary("../../c/build/win32/output/dxl_x86_c.dll")  # for windows 32bit
 # dxl_lib = cdll.LoadLibrary("../../c/build/win64/output/dxl_x64_c.dll")  # for windows 64bit
 # dxl_lib = cdll.LoadLibrary("../../c/build/linux32/libdxl_x86_c.so")     # for linux 32bit
-# dxl_lib = cdll.LoadLibrary("../../c/build/linux64/libdxl_x64_c.so")     # for linux 64bit
+dxl_lib = cdll.LoadLibrary("../../c/build/linux64/libdxl_x64_c.so")     # for linux 64bit
 # dxl_lib = cdll.LoadLibrary("../../c/build/linux_sbc/libdxl_sbc_c.so")   # for SBC linux
 # dxl_lib = cdll.LoadLibrary("../../c/build/mac/libdxl_mac_c.dylib")      # for Mac OS
 
@@ -144,9 +144,17 @@ txPacket = dxl_lib.txPacket
 txPacket.argtypes = [c_int, c_int]
 txPacket.restype = None
 
+_rxPacket = dxl_lib._rxPacket
+_rxPacket.argtypes = [c_int, c_int, POINTER(c_uint8)]
+_rxPacket.restype = None
+
 rxPacket = dxl_lib.rxPacket
 rxPacket.argtypes = [c_int, c_int]
 rxPacket.restype = None
+
+_txRxPacket = dxl_lib._txRxPacket
+_txRxPacket.argtypes = [c_int, c_int, POINTER(c_uint8), POINTER(c_uint8)]
+_txRxPacket.restype = None
 
 txRxPacket = dxl_lib.txRxPacket
 txRxPacket.argtypes = [c_int, c_int]
@@ -167,6 +175,10 @@ broadcastPing.restype = None
 getBroadcastPingResult = dxl_lib.getBroadcastPingResult
 getBroadcastPingResult.argtypes = [c_int, c_int, c_int]
 getBroadcastPingResult.restype = c_uint8
+
+action = dxl_lib.action
+action.argtypes = [c_int, c_int, c_uint8]
+action.restype = None
 
 reboot = dxl_lib.reboot
 reboot.argtypes = [c_int, c_int, c_uint8]

@@ -2,7 +2,8 @@
 #coding: UTF-8
 
 import dynamixel_functions as df
-from ctypes import c_char_p
+import ctypes
+from ctypes import c_char_p, c_uint8, create_string_buffer
 
 COMM_SUCCESS       = 0
 COMM_PORT_BUSY     = -1000
@@ -34,7 +35,7 @@ class PortHandler:
     return c_char_p((df.getPortName(self._handler))).value
     
   def setBaudRate(self, baud_rate):
-    return bool(int(df.setBaudRate(self._handler, baudrate)))
+    return bool(int(df.setBaudRate(self._handler, baud_rate)))
     
   def getBaudRate(self):
     return int(df.getBaudRate(self._handler))
@@ -61,142 +62,159 @@ class PortHandler:
 
 class PacketHandler:
   __initiated = False
-  __init__(self, protocol_version = 1):
+  
+  def __init__(self, protocol_version = 1):
     self._v = protocol_version
-    if not initiated:
+    if not PacketHandler.__initiated:
       df.packetHandler()
       PacketHandler.__initiated = True
   
   def getTxRxResult(result): 
-    return c_char_p(df.getTxRxResult(result)).value
+    return c_char_p(df.getTxRxResult(self._v, result)).value
 
   def getRxPacketError(error):
-    return c_char_p(df.getRxPacketError(error)).value
+    return c_char_p(df.getRxPacketError(self._v, error)).value
 
-  def getLastTxRxResult(self, port_num):
-    return int(df.getLastTxRxResult(port_num))
+  def getLastTxRxResult(self, port):
+    return int(df.getLastTxRxResult(port._handler, self._v))
   
-  def getLastRxPacketError(self, port_num):
-    return int(df.getLastRxPacketError(port_num))
+  def getLastRxPacketError(self, port):
+    return int(df.getLastRxPacketError(port._handler, self._v))
   
-  #def setDataWrite(self, port_num, data_length, data_pos, data):
-  #  df.setDataWrite(port_num, self._v, data_length, data_pos, data)
+  #def setDataWrite(self, port, data_length, data_pos, data):
+  #  df.setDataWrite(port._handler, self._v, data_length, data_pos, data)
     
-  #def getDataRead(self, port_num, data_length, data_pos):
-  #  return int(df.getDataRead(port_num, self._v, data_length, data_pos))
+  #def getDataRead(self, port, data_length, data_pos):
+  #  return int(df.getDataRead(port._handler, self._v, data_length, data_pos))
 
-  def txPacket(self, port_num, packet):
-    df._txPacket(port_num, self._v, c_char_p(packet))
+  def txPacket(self, port, tx_packet):
+    tx_buffer = (c_uint8 * len(tx_packet))(*tx_packet)
+    df._txPacket(port._handler, self._v, tx_buffer)
+    return self.getLastTxRxResult(port)
     
-  def rxPacket(self, port_num):
-    df.rxPacket(port_num, self._v)
+  def rxPacket(self, port, rx_len):
+    rx_buffer = (c_uint8 * rx_len)()
+    df._rxPacket(port._handler, self._v, rx_buffer)
+    return self.getLastTxRxResult(port), rx_buffer[:]
 
-  def txRxPacket(self, port_num):
-    df.txRxPacket(port_num, self._v)
+  def txRxPacket(self, port, tx_packet, rx_len):
+    tx_buffer = (c_uint8 * len(tx_packet))(*tx_packet)
+    rx_buffer = (c_uint8 * rx_len)()
+    df._txRxPacket(port._handler, self._v, tx_buffer, rx_buffer)
+    return self.getLastTxRxResult(port), rx_buffer[:]
 
-  def ping(self, port_num, id):
-    df.ping(port_num, self._v, id)
+  def ping(self, port, id, model_num=False):
+    df.ping(port._handler, self._v, id)
+    if model_num is True:
+      return self.getLastTxRxResult(port), int(df.pingGetModelNum(port._handler, self._v, id))
+    else:
+      return self.getLastTxRxResult(port)
+
+  def broadcastPing(self, port):
+    df.broadcastPing(port._handler, self._v)
+    l = []
+    for i in range(0,253):
+      if df.getBroadcastPingResult(port._handler, self._v, i) is True:
+        l.append(i)
+    return self.getLastTxRxResult(port), l
+
+  def action(self, port, id):
+    df.action(port._handler, self._v, id)
     
-  def pingGetModelNum(self, port_num, id):
-    return int(df.pingGetModelNum(port_num, self._v, id))
+  def reboot(self, port, id):
+    df.reboot(port._handler, self._v, id)
 
-  def broadcastPing(self, port_num):
-    df.broadcastPing(port_num, self._v)
+  def factoryReset(self, port, id):
+    df.factoryReset(port._handler, self._v, id)
 
-  def reboot(self, port_num, id):
-    df.reboot(port_num, self._v, id)
-
-  def factoryReset(self, port_num, id):
-    df.factoryReset(port_num, self._v, id)
-
-  def readTx(self, port_num, id, address, length):
-    df.readTx(port_num, self._v, id, address, length)
+  def readTx(self, port, id, address, length):
+    df.readTx(port._handler, self._v, id, address, length)
   
-  def readRx(self, port_num, length):
-    df.readRx(port_num, self._v, length)
+  def readRx(self, port, length):
+    df.readRx(port._handler, self._v, length)
 
-  def readTxRx(self, port_num, id, address, length):
-    df.readTxRx(port_num, self._v, id, address, length)
+  def readTxRx(self, port, id, address, length):
+    df.readTxRx(port._handler, self._v, id, address, length)
 
-  def read1ByteTx(self, port_num, id, address):
-    df.read1ByteTx(port_num, self._v, id, address)
+  def read1ByteTx(self, port, id, address):
+    df.read1ByteTx(port._handler, self._v, id, address)
   
-  def read1ByteRx(self, port_num):
-    return int(df.read1ByteRx(port_num))
+  def read1ByteRx(self, port):
+    return int(df.read1ByteRx(port._handler))
 
-  def read1ByteTxRx(self, port_num, id, address):
-    return int(df.read1ByteTxRx(port_num, self._v, id, address))
+  def read1ByteTxRx(self, port, id, address):
+    return int(df.read1ByteTxRx(port._handler, self._v, id, address))
     
-  def read2ByteTx(self, port_num, id, address):
-    df.read2ByteTx(port_num, self._v, id, address)
+  def read2ByteTx(self, port, id, address):
+    df.read2ByteTx(port._handler, self._v, id, address)
   
-  def read2ByteRx(self, port_num):
-    return int(df.read2ByteRx(port_num))
+  def read2ByteRx(self, port):
+    return int(df.read2ByteRx(port._handler))
 
-  def read2ByteTxRx(self, port_num, id, address):
-    return int(df.read2ByteTxRx(port_num, self._v, id, address))
+  def read2ByteTxRx(self, port, id, address):
+    return int(df.read2ByteTxRx(port._handler, self._v, id, address))
     
-  def read4ByteTx(self, port_num, id, address):
-    df.read4ByteTx(port_num, self._v, id, address)
+  def read4ByteTx(self, port, id, address):
+    df.read4ByteTx(port._handler, self._v, id, address)
   
-  def read4ByteRx(self, port_num):
-    return int(df.read4ByteRx(port_num))
+  def read4ByteRx(self, port):
+    return int(df.read4ByteRx(port._handler))
 
-  def read4ByteTxRx(self, port_num, id, address):
-    return int(df.read4ByteTxRx(port_num, self._v, id, address))
+  def read4ByteTxRx(self, port, id, address):
+    return int(df.read4ByteTxRx(port._handler, self._v, id, address))
 
-  def writeTxOnly(self, port_num, id, address, length):
-    df.writeTxOnly(port_num, self._v, id, address, length)
+  def writeTxOnly(self, port, id, address, length):
+    df.writeTxOnly(port._handler, self._v, id, address, length)
   
-  def writeTxRx(self, port_num, id, address, length):
-    df.writeTxOnly(port_num, self._v, id, address, length)
+  def writeTxRx(self, port, id, address, length):
+    df.writeTxOnly(port._handler, self._v, id, address, length)
   
-  def write1ByteTxOnly(self, port_num, id, address, data):
-    df.write1ByteTxOnly(port_num, self._v, id, address, data)
+  def write1ByteTxOnly(self, port, id, address, data):
+    df.write1ByteTxOnly(port._handler, self._v, id, address, data)
     
-  def write1ByteTxRx(self, port_num, id, address, data):
-    df.write1ByteTxOnly(port_num, self._v, id, address, data)
+  def write1ByteTxRx(self, port, id, address, data):
+    df.write1ByteTxOnly(port._handler, self._v, id, address, data)
 
-  def write2ByteTxOnly(self, port_num, id, address, data):
-    df.write2ByteTxOnly(port_num, self._v, id, address, data)
+  def write2ByteTxOnly(self, port, id, address, data):
+    df.write2ByteTxOnly(port._handler, self._v, id, address, data)
   
-  def write2ByteTxRx(self, port_num, id, address, data):
-    df.write2ByteTxOnly(port_num, self._v, id, address, data)
+  def write2ByteTxRx(self, port, id, address, data):
+    df.write2ByteTxOnly(port._handler, self._v, id, address, data)
   
-  def write4ByteTxOnly(self, port_num, id, address, data):
-    df.write4ByteTxOnly(port_num, self._v, id, address, data)
+  def write4ByteTxOnly(self, port, id, address, data):
+    df.write4ByteTxOnly(port._handler, self._v, id, address, data)
     
-  def write4ByteTxRx(self, port_num, id, address, data):
-    df.write4ByteTxOnly(port_num, self._v, id, address, data)
+  def write4ByteTxRx(self, port, id, address, data):
+    df.write4ByteTxOnly(port._handler, self._v, id, address, data)
 
-  def regWriteTxOnly(self, port_num, id, address, length):
-    df.regWriteTxOnly(port_num, self._v, id, address, length)
+  def regWriteTxOnly(self, port, id, address, length):
+    df.regWriteTxOnly(port._handler, self._v, id, address, length)
 
-  def regWriteTxRx(self, port_num, id, address, length):
-    df.regWriteTxRx(port_num, self._v, id, address, length)
+  def regWriteTxRx(self, port, id, address, length):
+    df.regWriteTxRx(port._handler, self._v, id, address, length)
     
-  def syncReadTx(self, port_num, start_address, data_length, param_length):
-    df.syncReadTx(port_num, self._v, start_address, data_length, param_length)    
+  def syncReadTx(self, port, start_address, data_length, param_length):
+    df.syncReadTx(port._handler, self._v, start_address, data_length, param_length)    
   
   # syncReadRx   -> GroupSyncRead
   # syncReadTxRx -> GroupSyncRead
 
-  def syncWriteTxOnly(self, port_num, start_address, data_length, param_length):
-    df.syncWriteTxOnly(port_num, self._v, start_address, data_length, param_length)
+  def syncWriteTxOnly(self, port, start_address, data_length, param_length):
+    df.syncWriteTxOnly(port._handler, self._v, start_address, data_length, param_length)
   
-  def bulkReadTx(self, port_num, param_length):
-    df.bulkReadTx(port_num, self._v, param_length)
+  def bulkReadTx(self, port, param_length):
+    df.bulkReadTx(port._handler, self._v, param_length)
 
   # bulkReadRx   -> GroupBulkRead
   # bulkReadTxRx -> GroupBulkRead
 
-  def bulkWriteTxOnly(self, port_num, param_length):
-    df.bulkWriteTxOnly(port_num, self._v, param_length)
+  def bulkWriteTxOnly(self, port, param_length):
+    df.bulkWriteTxOnly(port._handler, self._v, param_length)
 
 
 class GroupBulkRead:  
-  def __init__(self, port_num, packet_handler):
-    self._b = int(df.groupBulkRead(port_num, packet_handler._v))
+  def __init__(self, port, packet_handler):
+    self._b = int(df.groupBulkRead(port._handler, packet_handler._v))
 
   def groupBulkReadAddParam(self, id, start_address, data_length):
     return int(df.groupBulkReadAddParam(self._b, id, start_address, data_length))
@@ -224,8 +242,8 @@ class GroupBulkRead:
     
 
 class GroupBulkWrite:
-  def __init__(self, port_num, packet_handler):
-    self._b = int(df.groupBulkWrite(port_num, packet_handler._v))
+  def __init__(self, port, packet_handler):
+    self._b = int(df.groupBulkWrite(port._handler, packet_handler._v))
 
   def groupBulkWriteAddParam(self, id, start_address, data_length, data, input_length):
     return int(df.groupBulkWriteAddParam(self._b, id, start_address, data_length, data, input_length))
@@ -245,8 +263,8 @@ class GroupBulkWrite:
 
 
 class GroupSyncRead:
-  def __init__(self, port_num, packet_handler, start_address, data_length):
-    self._g = int(df.groupSyncRead(port_num, packet_handler._v, start_address, data_length))
+  def __init__(self, port, packet_handler, start_address, data_length):
+    self._g = int(df.groupSyncRead(port._handler, packet_handler._v, start_address, data_length))
 
   def groupSyncReadAddParam(id):
     return int(df.groupSyncReadAddParam(self._g, id))
@@ -274,8 +292,8 @@ class GroupSyncRead:
 
 
 class GroupSyncWrite:
-  def __init__(self, port_num, packet_handler, start_address, data_length):
-    self._g = int(df.groupSyncWrite(port_num, packet_handler._v, start_address, data_length))
+  def __init__(self, port, packet_handler, start_address, data_length):
+    self._g = int(df.groupSyncWrite(port._handler, packet_handler._v, start_address, data_length))
 
   def groupSyncWriteAddParam(self, id, data, data_length):
     return int(df.groupSyncWriteAddParam(self._g, id, data, data_length))

@@ -145,18 +145,6 @@ uint32_t getDataRead(int port_num, int protocol_version, uint16_t data_length, u
   }
 }
 
-void txPacket(int port_num, int protocol_version)
-{
-  if (protocol_version == 1)
-  {
-    txPacket1(port_num);
-  }
-  else
-  {
-    txPacket2(port_num);
-  }
-}
-
 void _txPacket(int port_num, int protocol_version, uint8_t * tx_packet)
 {
   if (protocol_version == 1)
@@ -169,6 +157,30 @@ void _txPacket(int port_num, int protocol_version, uint8_t * tx_packet)
   }
 }
 
+void txPacket(int port_num, int protocol_version)
+{
+  if (protocol_version == 1)
+  {
+    txPacket1(port_num);
+  }
+  else
+  {
+    txPacket2(port_num);
+  }
+}
+
+void _rxPacket(int port_num, int protocol_version, uint8_t * rx_packet)
+{
+  if (protocol_version == 1)
+  {
+    _rxPacket1(port_num, rx_packet);
+  }
+  else
+  {
+    _rxPacket2(port_num, rx_packet);
+  }
+}
+
 void rxPacket(int port_num, int protocol_version)
 {
   if (protocol_version == 1)
@@ -178,6 +190,18 @@ void rxPacket(int port_num, int protocol_version)
   else
   {
     rxPacket2(port_num);
+  }
+}
+
+void _txRxPacket(int port_num, int protocol_version, uint8_t * tx_packet, uint8_t *rx_packet)
+{
+  if (protocol_version == 1)
+  {
+    _txRxPacket1(port_num, tx_packet, rx_packet);
+  }
+  else
+  {
+    _txRxPacket2(port_num, tx_packet, rx_packet);
   }
 }
 
@@ -239,6 +263,18 @@ uint8_t getBroadcastPingResult(int port_num, int protocol_version, int id)
   else
   {
     return getBroadcastPingResult2(port_num, id);
+  }
+}
+
+void action(int port_num, int protocol_version, uint8_t id)
+{
+  if (protocol_version == 1)
+  {
+    action1(port_num, id);
+  }
+  else
+  {
+    action2(port_num, id);
   }
 }
 
