@@ -255,14 +255,15 @@ class PacketHandler:
     return self.getLastTxRxResult(port)
 
 
-#TODO: review following classes 
-'''
 class GroupBulkRead:  
   def __init__(self, port, packet_handler):
     self._b = int(df.groupBulkRead(port._handler, packet_handler._v))
+    self._packet_h = packet_handler
+    self._port_h = port
 
   def groupBulkReadAddParam(self, id, start_address, data_length):
-    return int(df.groupBulkReadAddParam(self._b, id, start_address, data_length))
+    res = df.groupBulkReadAddParam(self._b, id, start_address, data_length)
+    return bool(int(res))
   
   def groupBulkReadRemoveParam(self, id):
     df.groupBulkReadRemoveParam(self._b, id)
@@ -272,29 +273,38 @@ class GroupBulkRead:
     
   def groupBulkReadTxPacket(self):
     df.groupBulkReadTxPacket(self._b)
+    return self._packet_h.getLastTxRxResult(self._port_h)
 
   def groupBulkReadRxPacket(self):
-    df.groupBulkReadRxPacket(self._b)    
+    df.groupBulkReadRxPacket(self._b)
+    return self._packet_h.getLastTxRxResult(self._port_h)
     
   def groupBulkReadTxRxPacket(self):
-    df.groupBulkReadTxRxPacket(self._b)    
+    df.groupBulkReadTxRxPacket(self._b)
+    return self._packet_h.getLastTxRxResult(self._port_h)
     
   def groupBulkReadIsAvailable(self, id, address, data_length):
-    return int(df.groupBulkReadIsAvailable(self._b, id, address, data_length))
+    res = df.groupBulkReadIsAvailable(self._b, id, address, data_length)
+    return bool(int(res))
   
   def groupBulkReadGetData(self, id, address, data_length):
-    return int(df.groupBulkReadGetData(self._b, id, address, data_length))
+    res = df.groupBulkReadGetData(self._b, id, address, data_length)
+    return int(res)
     
-
+    
 class GroupBulkWrite:
   def __init__(self, port, packet_handler):
     self._b = int(df.groupBulkWrite(port._handler, packet_handler._v))
+    self._packet_h = packet_handler
+    self._port_h = port
 
-  def groupBulkWriteAddParam(self, id, start_address, data_length, data, input_length):
-    return int(df.groupBulkWriteAddParam(self._b, id, start_address, data_length, data, input_length))
+  def groupBulkWriteAddParam(self, id, start_address, data_length, data): #TODO accept data like uint8_t* instead of uint32_t
+    res = df.groupBulkWriteAddParam(self._b, id, start_address, data_length, data, data_length)
+    return bool(int(res))
     
-  def groupBulkWriteChangeParam(self, id, start_address, data_length, data, input_length, data_pos):
-    return bool(int(df.groupBulkWriteChangeParam(self._b, id, start_address, data_length, data, input_length, data_pos)))
+  def groupBulkWriteChangeParam(self, id, start_address, data_length, data): #TODO accept data like uint8_t* instead of uint32_t
+    res = df.groupBulkWriteChangeParam(self._b, id, start_address, data_length, data, data_length, 0)
+    return bool(int(res))
   
   def groupBulkWriteRemoveParam(self, id):
     df.groupBulkWriteRemoveParam(self._b, id)
@@ -304,15 +314,18 @@ class GroupBulkWrite:
     
   def groupBulkWriteTxPacket(self):
     df.groupBulkWriteTxPacket(self._b)
-
+    return self._packet_h.getLastTxRxResult(self._port_h)
 
 
 class GroupSyncRead:
   def __init__(self, port, packet_handler, start_address, data_length):
     self._g = int(df.groupSyncRead(port._handler, packet_handler._v, start_address, data_length))
+    self._packet_h = packet_handler
+    self._port_h = port
 
   def groupSyncReadAddParam(id):
-    return int(df.groupSyncReadAddParam(self._g, id))
+    res = df.groupSyncReadAddParam(self._g, id)
+    return bool(int(res))
     
   def groupSyncReadRemoveParam(id):
     df.groupSyncReadRemoveParam(self._g, id)
@@ -322,15 +335,19 @@ class GroupSyncRead:
     
   def groupSyncReadTxPacket():
     df.groupSyncReadTxPacket(self._g)
+    return self._packet_h.getLastTxRxResult(self._port_h)
     
   def groupSyncReadRxPacket():
     df.groupSyncReadRxPacket(self._g)
+    return self._packet_h.getLastTxRxResult(self._port_h)
     
   def groupSyncReadTxRxPacket():
     df.groupSyncReadTxRxPacket(self._g)
+    return self._packet_h.getLastTxRxResult(self._port_h)
 
   def groupSyncReadIsAvailable(id, address, data_length):
-    return int(df.groupSyncReadIsAvailable(self._g, id, address, data_length))
+    res = df.groupSyncReadIsAvailable(self._g, id, address, data_length)
+    return bool(int(res))
 
   def groupSyncReadGetData(id, address, data_length):
     return int(df.groupSyncReadGetData(self._g, id, address, data_length))
@@ -339,12 +356,17 @@ class GroupSyncRead:
 class GroupSyncWrite:
   def __init__(self, port, packet_handler, start_address, data_length):
     self._g = int(df.groupSyncWrite(port._handler, packet_handler._v, start_address, data_length))
+    self._packet_h = packet_handler
+    self._port_h = port
+    self._data_length = data_length
 
-  def groupSyncWriteAddParam(self, id, data, data_length):
-    return int(df.groupSyncWriteAddParam(self._g, id, data, data_length))
+  def groupSyncWriteAddParam(self, id, data):
+    res = df.groupSyncWriteAddParam(self._g, id, data, self._data_length)
+    return bool(int(res))
     
-  def groupSyncWriteChangeParam(self, id, data, data_length, data_pos):
-    return bool(int(df.groupSyncWriteChangeParam(self._g, id, data, data_length, data_pos)))
+  def groupSyncWriteChangeParam(self, id, data, data_pos):
+    res = df.groupSyncWriteChangeParam(self._g, id, data, self._data_length, 0)
+    return bool(int(res))
   
   def groupSyncWriteRemoveParam(self, id):
     df.groupSyncWriteRemoveParam(self._g, id)
@@ -354,4 +376,5 @@ class GroupSyncWrite:
     
   def groupSyncWriteTxPacket(self):
     df.groupSyncWriteTxPacket(self._g)
-'''
+    return self._packet_h.getLastTxRxResult(self._port_h)
+
